@@ -1,0 +1,203 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema little_lemon_db
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema little_lemon_db
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `little_lemon_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
+USE `little_lemon_db` ;
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`Customers`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`Customers` (
+  `idCustomer` INT NOT NULL,
+  `CustomerFirstName` VARCHAR(255) NULL DEFAULT NULL,
+  `CustomerLastName` VARCHAR(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`idCustomer`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`Employees`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`Employees` (
+  `EmployeeID` INT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(255) NULL DEFAULT NULL,
+  `Role` VARCHAR(255) NULL DEFAULT NULL,
+  `Address` VARCHAR(255) NULL DEFAULT NULL,
+  `Contact_Number` INT NULL DEFAULT NULL,
+  `Email` VARCHAR(255) NULL DEFAULT NULL,
+  `Annual_Salary` VARCHAR(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`EmployeeID`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 7
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`Bookings`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`Bookings` (
+  `BookingID` INT NOT NULL AUTO_INCREMENT,
+  `TableNo` INT NULL DEFAULT NULL,
+  `CustomerID` INT NOT NULL,
+  `BookingSlot` TIME NOT NULL,
+  `EmployeeID` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`BookingID`),
+  INDEX `EmployeeID_idx` (`EmployeeID` ASC) VISIBLE,
+  INDEX `CustomerID_idx` (`CustomerID` ASC) VISIBLE,
+  CONSTRAINT `CustomerID`
+    FOREIGN KEY (`CustomerID`)
+    REFERENCES `little_lemon_db`.`Customers` (`idCustomer`),
+  CONSTRAINT `EmployeeID`
+    FOREIGN KEY (`EmployeeID`)
+    REFERENCES `little_lemon_db`.`Employees` (`EmployeeID`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 81
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`MenuItems`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`MenuItems` (
+  `ItemID` INT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(200) NULL DEFAULT NULL,
+  `Type` VARCHAR(100) NULL DEFAULT NULL,
+  `Price` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`ItemID`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 18
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`Menus`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`Menus` (
+  `MenuID` INT NOT NULL,
+  `ItemID` INT NOT NULL,
+  `Cuisine` VARCHAR(100) NULL DEFAULT NULL,
+  PRIMARY KEY (`MenuID`, `ItemID`),
+  INDEX `MenuItemId_idx` (`ItemID` ASC) VISIBLE,
+  CONSTRAINT `MenuItemId`
+    FOREIGN KEY (`ItemID`)
+    REFERENCES `little_lemon_db`.`MenuItems` (`ItemID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `little_lemon_db`.`Orders`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `little_lemon_db`.`Orders` (
+  `OrderID` INT NOT NULL,
+  `TableNo` INT NOT NULL,
+  `MenuID` INT NULL DEFAULT NULL,
+  `BookingID` INT NULL DEFAULT NULL,
+  `BillAmount` INT NULL DEFAULT NULL,
+  `Quantity` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`OrderID`, `TableNo`),
+  INDEX `MenuID_idx` (`MenuID` ASC) VISIBLE,
+  INDEX `BookingID_idx` (`BookingID` ASC) VISIBLE,
+  CONSTRAINT `BookingID`
+    FOREIGN KEY (`BookingID`)
+    REFERENCES `little_lemon_db`.`Bookings` (`BookingID`),
+  CONSTRAINT `MenuID`
+    FOREIGN KEY (`MenuID`)
+    REFERENCES `little_lemon_db`.`Menus` (`MenuID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+USE `little_lemon_db` ;
+
+-- -----------------------------------------------------
+-- procedure AddBooking
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `little_lemon_db`$$
+CREATE DEFINER=`coderemote`@`%` PROCEDURE `AddBooking`(BookingID int, TableNo int, CustomerID int, BookingSlot date, EmployeeID int)
+BEGIN
+	INSERT INTO Bookings VALUES (BookingID, TableNo, CustomerID, BookingSlot, EmployeeID);
+    SELECT 'New booking added';
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CancelBooking
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `little_lemon_db`$$
+CREATE DEFINER=`coderemote`@`%` PROCEDURE `CancelBooking`(CancelBookingID int)
+BEGIN
+	DELETE FROM Bookings WHERE BookingID=CancelBookingID;
+    SELECT 'Booking ' + CancelBookingID + ' cancelled';
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure GetMaxQuantity
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `little_lemon_db`$$
+CREATE DEFINER=`coderemote`@`%` PROCEDURE `GetMaxQuantity`()
+BEGIN
+	SELECT MAX(Quantity) AS "Max Quantity in Order" FROM Orders;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure ManageBooking
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `little_lemon_db`$$
+CREATE DEFINER=`coderemote`@`%` PROCEDURE `ManageBooking`(ManageBookingID int, ManageEmployeeID int)
+BEGIN
+	UPDATE Booking SET EmployeeID=ManageEmployeeID WHERE BookingID=ManageBookingID;
+    SELECT 'Employee ' + EmployeeID + ' will manage booking ' + ManageBookingID;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure UpdateBooking
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `little_lemon_db`$$
+CREATE DEFINER=`coderemote`@`%` PROCEDURE `UpdateBooking`(BookingIDUpdate int, NewBookingSlot date)
+BEGIN
+	UPDATE Bookings SET BookingSlot=NewBookingSlot WHERE BookingID=BookingIDUpdate;
+    SELECT 'Booking ' + BookingID + ' updated';
+END$$
+
+DELIMITER ;
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
